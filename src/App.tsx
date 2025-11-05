@@ -1,7 +1,14 @@
-import "./App.css";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import MainPage from "./page/mainPage";
 
 function App() {
-  return <div>이게 메인이다</div>;
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<MainPage />} />
+      </Routes>
+    </Router>
+  );
 }
 
 export default App;
