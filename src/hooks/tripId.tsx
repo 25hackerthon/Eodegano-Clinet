@@ -1,29 +1,26 @@
-import { createContext, useContext, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-interface tripIdContextType {
-  tripId: number;
-  tripIdString: number;
+interface TripContextType {
+  tripId: number | null;
+  setTripId: (id: number) => void;
 }
 
-const TripContext = createContext<tripIdContextType | null>(null);
+const TripContext = createContext<TripContextType | undefined>(undefined);
 
-export function TripProvider({ children }: { children: ReactNode }) {
-  const tripIdString = localStorage.getItem("tripId");
-  const tripId = tripIdString ? Number(tripIdString) : null;
+export const TripProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [tripId, setTripId] = useState<number | null>(null);
 
-  console.log("tripId", tripId);
+  return (
+    <TripContext.Provider value={{ tripId, setTripId }}>
+      {children}
+    </TripContext.Provider>
+  );
+};
 
-  const value = {
-    tripId,
-  };
-
-  return <TripContext.Provider value={value}>{children}</TripContext.Provider>;
-}
-
-export function useTripId() {
+export const useTripId = () => {
   const context = useContext(TripContext);
-  if (!context) {
-    throw new Error("useProject must be used within a ProjectProvider");
+  if (context === undefined) {
+    throw new Error('useTripId must be used within a TripProvider');
   }
   return context;
-}
+};
