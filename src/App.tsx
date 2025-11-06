@@ -1,9 +1,11 @@
+
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Header from './components/Header'
 import CreatePage from './pages/create'
 import HomePage from './pages/Home'
 import MapPage from "./page/Map"
 import { TripProvider } from "./hooks/tripId"
+import TemplatePage from "./page/templatePage";
 
 function App() {
   return (
@@ -15,11 +17,12 @@ function App() {
             <Route path='/' element={<HomePage />} />
             <Route path="/create" element={<CreatePage />} />
             <Route path="/map" element={<MapPage />} />
+            <Route path="/Template" element={<TemplatePage />} />
           </Routes>
-        </div>
+          </ div>
       </TripProvider>
     </Router>
-  )
+  );
 }
 
 export default App;
