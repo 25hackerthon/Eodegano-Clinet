@@ -1,73 +1,10 @@
 import { useState } from 'react'
-import styled from '@emotion/styled'
 import StepLayout from './StepLayout'
 
 interface Step5DetailedRegionProps {
   onNext: (DetailRegion: string) => void
   onPrevious: () => void
 }
-
-const ContentContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  width: 100%;
-`
-
-const TitleSection = styled.div`
-  padding-top: 60px;
-  margin-bottom: 40px;
-`
-
-const StepTitle = styled.h1`
-  font-family: 'Inter', sans-serif;
-  font-weight: 700;
-  font-size: 36px;
-  color: #000000;
-  margin: 0;
-  text-align: center;
-`
-
-const InputSection = styled.div`
-  flex: 1;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding-top: 30%;
-`
-
-const InputWrapper = styled.div`
-  width: 100%;
-  max-width: 500px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-`
-
-const DetailRegionInput = styled.input`
-  width: 400px;
-  height: 80px;
-  border: 2px solid #e9ecef;
-  border-radius: 20px;
-  padding: 0 30px;
-  font-family: 'Inter', sans-serif;
-  font-weight: 500;
-  font-size: 24px;
-  text-align: center;
-  color: #000000;
-  background: #ffffff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-
-  &::placeholder {
-    color: #6c757d;
-  }
-
-  &:focus {
-    outline: none;
-    border-color: #007bff;
-    box-shadow: 0 4px 16px rgba(0, 123, 255, 0.15);
-  }
-`
 
 export default function Step5DetailedRegion({ onNext, onPrevious }: Step5DetailedRegionProps) {
   const [DetailRegion, setDetailRegion] = useState<string>('')
@@ -88,22 +25,25 @@ export default function Step5DetailedRegion({ onNext, onPrevious }: Step5Detaile
       onNext={handleNext}
       nextDisabled={!isValid}
     >
-      <ContentContainer>
-        <TitleSection>
-          <StepTitle>어느 지역을 여행하고 싶으신가요?</StepTitle>
-        </TitleSection>
+      <div className="flex flex-col h-full w-full">
+        <div className="pt-16 mb-12">
+          <h1 className="font-inter font-bold text-5xl text-black m-0 text-center">
+            어느 지역을 여행하고 싶으신가요?
+          </h1>
+        </div>
         
-        <InputSection>
-          <InputWrapper>
-            <DetailRegionInput
+        <div className="flex-1 flex items-start justify-center pt-[25%]">
+          <div className="w-full max-w-2xl flex justify-center items-center">
+            <input
               type="text"
               placeholder="상세 지역을 입력하세요"
               value={DetailRegion}
               onChange={(e) => setDetailRegion(e.target.value)}
+              className="w-[500px] h-24 border-2 border-gray-200 rounded-3xl px-10 font-inter font-medium text-3xl text-center text-black bg-white shadow-md placeholder:text-gray-500 focus:outline-none focus:border-blue-600 focus:shadow-lg"
             />
-          </InputWrapper>
-        </InputSection>
-      </ContentContainer>
+          </div>
+        </div>
+      </div>
     </StepLayout>
   )
 }
