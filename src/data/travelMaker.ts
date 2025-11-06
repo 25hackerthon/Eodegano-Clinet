@@ -6,6 +6,7 @@ export interface TravelMarker {
   lng: number;
   category: 1 | 2 | 3; // 1: 음식점, 2: 관광지, 3: 숙소
   day: number;
+  isApiMarker?: boolean; // API에서 온 마커인지 표시
 }
 
 // 카테고리 정보

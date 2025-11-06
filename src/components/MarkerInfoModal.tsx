@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -29,8 +29,29 @@ interface MarkerInfoModalProps {
   onClose: () => void;
 }
 
+interface CongestionData {
+  name: string;
+  address: string;
+  rating: number;
+  popular_times: Array<{
+    day: number | string;
+    day_text?: string;
+    popular_times?: Array<{
+      hour: number;
+      percentage: number;
+      title: string;
+      time: string;
+    }>;
+    percentage?: number;
+    title?: string;
+    time?: number;
+  }>;
+}
+
 export default function MarkerInfoModal({ marker, onClose }: MarkerInfoModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
+  const [congestionData, setCongestionData] = useState<CongestionData | null>(null);
+  const [loading, setLoading] = useState(false);
 
   // 모달 외부 클릭 시 닫기
   useEffect(() => {
@@ -60,24 +81,184 @@ export default function MarkerInfoModal({ marker, onClose }: MarkerInfoModalProp
     };
   }, [onClose]);
 
-  // 혼잡도 데이터 (시간대별)
-  const crowdData = {
-    labels: ['6시', '9시', '12시', '15시', '18시', '21시'],
-    datasets: [
-      {
-        label: '혼잡도',
-        data: [20, 45, 80, 90, 70, 30],
-        fill: true,
-        backgroundColor: 'rgba(99, 102, 241, 0.1)',
-        borderColor: 'rgba(99, 102, 241, 0.8)',
-        borderWidth: 2,
-        pointBackgroundColor: 'rgba(99, 102, 241, 1)',
-        pointBorderColor: '#fff',
-        pointBorderWidth: 2,
-        pointRadius: 4,
-        tension: 0.4,
-      },
-    ],
+  // 혼잡도 데이터 가져오기
+  useEffect(() => {
+    const fetchCongestionData = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`http://192.168.15.169:8000/congestion?place=${encodeURIComponent(marker.name)}`);
+        if (response.ok) {
+          const data = await response.json();
+          setCongestionData(data);
+        }
+      } catch (error) {
+        console.error('혼잡도 데이터 로딩 실패:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCongestionData();
+  }, [marker.name]);
+
+  // 지역별/카테고리별 기본 혼잡도 패턴 생성
+  const getDefaultCongestionPattern = () => {
+    const keyHours = [6, 9, 12, 15, 18, 21];
+    const labels = keyHours.map(hour => `${hour}시`);
+    let data: number[] = [];
+    let backgroundColor, borderColor, pointBackgroundColor;
+
+    // 카테고리별 기본 패턴
+    switch (marker.category) {
+      case 1: // 음식점
+        // 식사시간대에 높은 혼잡도
+        data = [5, 25, 85, 45, 90, 70];
+        backgroundColor = 'rgba(249, 115, 22, 0.1)';
+        borderColor = 'rgba(249, 115, 22, 0.8)';
+        pointBackgroundColor = 'rgba(249, 115, 22, 1)';
+        break;
+      case 2: // 관광지
+        // 오후에 높은 혼잡도
+        data = [10, 40, 70, 85, 75, 35];
+        backgroundColor = 'rgba(99, 102, 241, 0.1)';
+        borderColor = 'rgba(99, 102, 241, 0.8)';
+        pointBackgroundColor = 'rgba(99, 102, 241, 1)';
+        break;
+      case 3: // 숙소
+        // 체크인/체크아웃 시간대에 높은 혼잡도
+        data = [15, 20, 30, 65, 80, 25];
+        backgroundColor = 'rgba(34, 197, 94, 0.1)';
+        borderColor = 'rgba(34, 197, 94, 0.8)';
+        pointBackgroundColor = 'rgba(34, 197, 94, 1)';
+        break;
+      default:
+        // 일반적인 패턴
+        data = [20, 45, 60, 70, 65, 40];
+        backgroundColor = 'rgba(156, 163, 175, 0.1)';
+        borderColor = 'rgba(156, 163, 175, 0.8)';
+        pointBackgroundColor = 'rgba(156, 163, 175, 1)';
+    }
+
+    // 지역명에 따른 추가 조정
+    const placeName = marker.name.toLowerCase();
+    if (placeName.includes('서울') || placeName.includes('강남') || placeName.includes('홍대')) {
+      // 도심지역은 전체적으로 혼잡도 증가
+      data = data.map(val => Math.min(100, val + 15));
+    } else if (placeName.includes('제주') || placeName.includes('강원') || placeName.includes('경주')) {
+      // 관광지역은 주말/휴일 패턴
+      data = data.map(val => Math.min(100, val + 10));
+    } else if (placeName.includes('부산') || placeName.includes('대구') || placeName.includes('광주')) {
+      // 지방 대도시
+      data = data.map(val => Math.min(100, val + 5));
+    }
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: '예상 혼잡도',
+          data,
+          fill: true,
+          backgroundColor,
+          borderColor,
+          borderWidth: 2,
+          pointBackgroundColor,
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          pointRadius: 4,
+          tension: 0.4,
+        },
+      ],
+    };
+  };
+
+  // 실제 혼잡도 데이터로 차트 생성
+  const getCrowdData = () => {
+    // 로딩 중일 때는 로딩 상태 표시
+    if (loading) {
+      return {
+        labels: ['로딩 중...'],
+        datasets: [
+          {
+            label: '혼잡도',
+            data: [0],
+            fill: true,
+            backgroundColor: 'rgba(156, 163, 175, 0.1)',
+            borderColor: 'rgba(156, 163, 175, 0.8)',
+            borderWidth: 2,
+            pointBackgroundColor: 'rgba(156, 163, 175, 1)',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 4,
+            tension: 0.4,
+          },
+        ],
+      };
+    }
+
+    // API 호출 완료 후 데이터 확인
+    // 데이터가 없거나 빈 배열일 때만 기본 패턴 사용
+    if (!congestionData || !congestionData.popular_times || congestionData.popular_times.length === 0) {
+      return getDefaultCongestionPattern();
+    }
+
+    // 현재 요일 가져오기 (0: 일요일, 1: 월요일, ...)
+    const today = new Date().getDay();
+    const todayData = congestionData.popular_times.find(day => day.day === today);
+    
+    // 오늘 데이터가 없거나 popular_times가 빈 배열일 때만 기본 패턴 사용
+    if (!todayData?.popular_times || todayData.popular_times.length === 0) {
+      return getDefaultCongestionPattern();
+    }
+
+    // 주요 시간대만 추출 (6시간 간격)
+    const keyHours = [6, 9, 12, 15, 18, 21];
+    const labels = keyHours.map(hour => `${hour}시`);
+    const data = keyHours.map(hour => {
+      const timeData = todayData.popular_times?.find(t => t.hour === hour);
+      return timeData?.percentage || 0;
+    });
+
+    // 혼잡도에 따른 색상 결정
+    const maxPercentage = Math.max(...data);
+    let backgroundColor, borderColor, pointBackgroundColor;
+    
+    if (maxPercentage <= 25) {
+      backgroundColor = 'rgba(34, 197, 94, 0.1)';
+      borderColor = 'rgba(34, 197, 94, 0.8)';
+      pointBackgroundColor = 'rgba(34, 197, 94, 1)';
+    } else if (maxPercentage <= 50) {
+      backgroundColor = 'rgba(234, 179, 8, 0.1)';
+      borderColor = 'rgba(234, 179, 8, 0.8)';
+      pointBackgroundColor = 'rgba(234, 179, 8, 1)';
+    } else if (maxPercentage <= 75) {
+      backgroundColor = 'rgba(249, 115, 22, 0.1)';
+      borderColor = 'rgba(249, 115, 22, 0.8)';
+      pointBackgroundColor = 'rgba(249, 115, 22, 1)';
+    } else {
+      backgroundColor = 'rgba(239, 68, 68, 0.1)';
+      borderColor = 'rgba(239, 68, 68, 0.8)';
+      pointBackgroundColor = 'rgba(239, 68, 68, 1)';
+    }
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: '혼잡도',
+          data,
+          fill: true,
+          backgroundColor,
+          borderColor,
+          borderWidth: 2,
+          pointBackgroundColor,
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          pointRadius: 4,
+          tension: 0.4,
+        },
+      ],
+    };
   };
 
   const chartOptions = {
@@ -171,7 +352,6 @@ export default function MarkerInfoModal({ marker, onClose }: MarkerInfoModalProp
             </svg>
           </button>
           
-          {/* 장소 이미지 */}
           <div className="h-64 bg-gray-200 rounded-t-lg overflow-hidden">
             <img
               src={getDefaultImage(marker.category)}
@@ -206,39 +386,26 @@ export default function MarkerInfoModal({ marker, onClose }: MarkerInfoModalProp
 
           {/* 혼잡도 차트 */}
           <div className="mb-6">
-            <h4 className="text-md font-semibold text-gray-800 mb-3">혼잡도</h4>
+            <h4 className="text-md font-semibold text-gray-800 mb-3">
+              오늘의 혼잡도 {loading && <span className="text-sm text-gray-500">(로딩 중...)</span>}
+            </h4>
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="h-48">
-                <Line data={crowdData} options={chartOptions} />
+                <Line data={getCrowdData()} options={chartOptions} />
               </div>
               <div className="mt-3 flex items-center justify-between text-sm text-gray-600">
                 <span>한적함</span>
                 <span>보통</span>
                 <span>혼잡함</span>
               </div>
-            </div>
-          </div>
-
-          {/* 추가 정보 */}
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="bg-blue-50 rounded-lg p-3">
-              <div className="flex items-center mb-1">
-                <svg className="w-4 h-4 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                </svg>
-                <span className="font-medium text-blue-800">운영시간</span>
+              <div className="mt-2 text-xs text-gray-500 text-center">
+                {loading 
+                  ? '데이터를 불러오는 중...'
+                  : congestionData && congestionData.popular_times && congestionData.popular_times.length > 0 
+                    ? `실시간 데이터 기반 • ${congestionData.name}`
+                    : `예상 혼잡도 패턴 • ${marker.category === 1 ? '음식점' : marker.category === 2 ? '관광지' : '숙소'} 기준`
+                }
               </div>
-              <p className="text-blue-700">09:00 - 18:00</p>
-            </div>
-            
-            <div className="bg-green-50 rounded-lg p-3">
-              <div className="flex items-center mb-1">
-                <svg className="w-4 h-4 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                </svg>
-                <span className="font-medium text-green-800">연락처</span>
-              </div>
-              <p className="text-green-700">02-1234-5678</p>
             </div>
           </div>
         </div>

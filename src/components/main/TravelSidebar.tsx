@@ -17,6 +17,8 @@ interface TravelSidebarProps {
   onToggleAddingMode: () => void;
   onRemoveMarker: (id: number) => void;
   onDayChange: (day: number) => void;
+  onShowAddPlaceModal?: () => void;
+  onRefreshPlaces?: () => void;
 }
 
 export default function TravelSidebar({
@@ -30,7 +32,9 @@ export default function TravelSidebar({
   routeDurations,
   onToggleAddingMode,
   onRemoveMarker,
-  onDayChange
+  onDayChange,
+  onShowAddPlaceModal,
+  onRefreshPlaces
 }: TravelSidebarProps) {
   const markersByDay = markers.reduce((acc, marker) => {
     if (!acc[marker.day]) acc[marker.day] = [];
@@ -62,23 +66,49 @@ export default function TravelSidebar({
             <span className="text-2xl">✈️</span>
             여행 플래너
           </h1>
-          <button
-            onClick={onToggleAddingMode}
-            className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg ${
-              isAddingMode 
-                ? 'bg-red-500 hover:bg-red-600 text-white hover:shadow-red-500/25' 
-                : 'bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm border border-white/30'
-            }`}
-          >
-            {isAddingMode ? '✕ 취소' : '+ 장소 추가'}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={onToggleAddingMode}
+              className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg ${
+                isAddingMode 
+                  ? 'bg-red-500 hover:bg-red-600 text-white hover:shadow-red-500/25' 
+                  : 'bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm border border-white/30'
+              }`}
+            >
+              {isAddingMode ? '✕ 취소' : '+ 지도 추가'}
+            </button>
+            {onShowAddPlaceModal && (
+              <button
+                onClick={onShowAddPlaceModal}
+                className="px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg bg-green-500 hover:bg-green-600 text-white"
+              >
+                📝 직접 추가
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* API 관련 버튼들 */}
+        <div className="flex gap-2 mb-4">
+          {onRefreshPlaces && (
+            <button
+              onClick={onRefreshPlaces}
+              className="flex-1 px-3 py-2 rounded-lg text-xs font-medium bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm border border-white/20 transition-all duration-200"
+              disabled={loading}
+            >
+              {loading ? '🔄 로딩...' : '🔄 새로고침'}
+            </button>
+          )}
+          <div className="flex-1 px-3 py-2 rounded-lg text-xs text-white/70 bg-white/5 border border-white/10">
+            총 {markers.length}개 장소
+          </div>
         </div>
 
         {isAddingMode && (
           <div className="p-4 bg-white/10 rounded-xl border border-white/20 backdrop-blur-sm animate-pulse">
             <div className="text-sm text-white flex items-center gap-2">
               <span className="animate-bounce">📍</span>
-              지도를 클릭해서 여행지를 추가하세요
+              지도를 클릭해서 위치를 선택하세요
             </div>
           </div>
         )}
