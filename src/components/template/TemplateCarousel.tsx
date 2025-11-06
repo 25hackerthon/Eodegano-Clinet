@@ -8,6 +8,10 @@ interface Template {
   subtitle: string;
   tags: string;
   image: string;
+  lat?: number;
+  lng?: number;
+  description?: string;
+  type?: "음식점" | "관광지" | "숙소";
 }
 
 interface TemplateCarouselProps {
@@ -15,6 +19,7 @@ interface TemplateCarouselProps {
   onAdd?: () => void;
   handleDel: (id: number) => void;
   onPlaceClick?: (place: Template) => void;
+  onReorder?: (newTemplates: Template[]) => void;
 }
 
 export default function TemplateCarousel({
@@ -22,60 +27,45 @@ export default function TemplateCarousel({
   onAdd,
   handleDel,
   onPlaceClick,
+  onReorder,
 }: TemplateCarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [scrollLeft, setScrollLeft] = useState(0);
-  const [selectedCards, setSelectedCards] = useState<Set<number>>(new Set());
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!scrollRef.current) return;
-    setIsDragging(true);
-    setStartX(e.pageX - scrollRef.current.offsetLeft);
-    setScrollLeft(scrollRef.current.scrollLeft);
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !scrollRef.current) return;
-    e.preventDefault();
-    const x = e.pageX - scrollRef.current.offsetLeft;
-    const walk = (x - startX) * 2;
-    scrollRef.current.scrollLeft = scrollLeft - walk;
+  const handleDragEnter = (index: number) => {
+    if (draggedIndex === null || draggedIndex === index) return;
+
+    const newTemplates = [...templates];
+    const draggedItem = newTemplates[draggedIndex];
+
+    // 드래그한 아이템을 제거하고 새 위치에 삽입
+    newTemplates.splice(draggedIndex, 1);
+    newTemplates.splice(index, 0, draggedItem);
+
+    // 부모 컴포넌트에 새로운 순서 전달
+    if (onReorder) {
+      onReorder(newTemplates);
+    }
+
+    setDraggedIndex(index);
   };
 
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const handleMouseLeave = () => {
-    setIsDragging(false);
-  };
-
-  const toggleCardSelection = (id: number) => {
-    setSelectedCards((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return newSet;
-    });
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
   };
 
   return (
     <>
       <div
         ref={scrollRef}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave}
-        className="flex h-70 gap-6 overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing"
+        className="flex h-70 gap-6 overflow-x-auto scrollbar-hide"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
-        {templates.map((template) => (
+        {templates.map((template, index) => (
           <TemplateCard
             key={template.id}
             title={template.title}
@@ -84,10 +74,13 @@ export default function TemplateCarousel({
             image={template.image}
             lat={template.lat}
             lng={template.lng}
+            description={template.description}
             handleDel={() => handleDel(template.id)}
-            isSelected={selectedCards.has(template.id)}
-            onSelect={() => toggleCardSelection(template.id)}
-            onViewDetails={() => onPlaceClick?.(template)}
+            index={index}
+            onDragStart={handleDragStart}
+            onDragEnter={handleDragEnter}
+            onDragEnd={handleDragEnd}
+            isDragging={draggedIndex === index}
           />
         ))}
         <AddTemplateCard onAdd={onAdd} />

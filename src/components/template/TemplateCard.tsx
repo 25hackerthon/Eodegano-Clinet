@@ -7,10 +7,15 @@ interface TemplateCardProps {
   tags: string;
   image: string;
   description?: string;
-  // mapUrl?: string;
   lat?: number;
   lng?: number;
   handleDel?: () => void;
+  // 드래그 관련 props 추가
+  index: number;
+  onDragStart: (index: number) => void;
+  onDragEnter: (index: number) => void;
+  onDragEnd: () => void;
+  isDragging: boolean;
 }
 
 export default function TemplateCard({
@@ -19,10 +24,14 @@ export default function TemplateCard({
   tags,
   image,
   description = "상세 설명이 없습니다.",
-  // mapUrl,
   lat,
   lng,
   handleDel,
+  index,
+  onDragStart,
+  onDragEnter,
+  onDragEnd,
+  isDragging,
 }: TemplateCardProps) {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
@@ -33,17 +42,24 @@ export default function TemplateCard({
     image,
     lat,
     lng,
-    // mapUrl,
   };
 
   return (
     <>
       <div
-        className="min-w-[320px] bg-white rounded-3xl border-2 border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition-shadow flex-shrink-0 relative"
+        draggable
+        onDragStart={() => onDragStart(index)}
+        onDragEnter={() => onDragEnter(index)}
+        onDragEnd={onDragEnd}
+        onDragOver={(e) => e.preventDefault()}
+        className={`min-w-[320px] bg-white rounded-3xl border-2 border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition-all flex-shrink-0 relative cursor-move ${
+          isDragging ? "opacity-40 scale-95" : ""
+        }`}
         style={{ userSelect: "none" }}
       >
         <button
           onClick={handleDel}
+          onMouseDown={(e) => e.stopPropagation()}
           className="absolute top-4 right-4 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:bg-gray-100 z-10"
         >
           ✕
@@ -56,6 +72,7 @@ export default function TemplateCard({
             <p className="text-xs text-gray-400">{tags}</p>
             <button
               onClick={() => setIsDetailOpen(true)}
+              onMouseDown={(e) => e.stopPropagation()}
               className="text-gray-400 text-sm font-semibold hover:text-gray-600 whitespace-nowrap"
             >
               보러가기
