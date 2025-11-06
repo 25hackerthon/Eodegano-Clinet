@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import styled from '@emotion/styled'
 import StepLayout from './StepLayout'
 
 interface Step4RegionProps {
@@ -19,78 +18,6 @@ const regions = [
   { id: 'chungnam', name: '충청남도', icon: '/src/assets/region9.svg' },
 ]
 
-const ContentContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  width: 100%;
-`
-
-const TitleSection = styled.div`
-  padding-top: 60px;
-  margin-bottom: 40px;
-`
-
-const StepTitle = styled.h1`
-  font-family: 'Inter', sans-serif;
-  font-weight: 700;
-  font-size: 36px;
-  color: #000000;
-  margin: 0;
-  text-align: center;
-`
-
-const ContentSection = styled.div`
-  flex: 1;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-`
-
-const RegionGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 150px);
-  gap: 30px 20px;
-  justify-content: center;
-`
-
-const RegionCard = styled.button<{ selected?: boolean }>`
-  width: 150px;
-  height: 150px;
-  border: ${props => props.selected ? '2px solid #007bff' : '1px solid #e9ecef'};
-  border-radius: 20px;
-  background: #ffffff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  cursor: pointer;
-  transition: all 0.2s;
-  padding: 15px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-
-  &:hover {
-    border-color: #007bff;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
-`
-
-const RegionIcon = styled.img`
-  width: 60px;
-  height: 60px;
-  object-fit: contain;
-`
-
-const RegionName = styled.span`
-  font-family: 'Inter', sans-serif;
-  font-weight: 500;
-  font-size: 14px;
-  color: #000000;
-  text-align: center;
-`
-
 export default function Step4Region({ onNext, onPrevious }: Step4RegionProps) {
   const [selectedRegion, setSelectedRegion] = useState<string>('')
 
@@ -108,26 +35,38 @@ export default function Step4Region({ onNext, onPrevious }: Step4RegionProps) {
       onNext={handleNext}
       nextDisabled={!selectedRegion}
     >
-      <ContentContainer>
-        <TitleSection>
-          <StepTitle>어느 지역을 여행하고 싶으신가요?</StepTitle>
-        </TitleSection>
+      <div className="flex flex-col h-full w-full">
+        <div className="pt-16 mb-12">
+          <h1 className="font-inter font-bold text-5xl text-black m-0 text-center">
+            어느 지역을 여행하고 싶으신가요?
+          </h1>
+        </div>
         
-        <ContentSection>
-          <RegionGrid>
+        <div className="flex-1 flex items-start justify-center">
+          <div className="grid grid-cols-3 gap-y-12 gap-x-12 justify-center">
             {regions.map((region) => (
-              <RegionCard
+              <button
                 key={region.id}
-                selected={selectedRegion === region.id}
+                className={`w-44 h-44 rounded-3xl bg-white flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-200 p-6 shadow-md hover:border-blue-600 hover:-translate-y-0.5 hover:shadow-lg ${
+                  selectedRegion === region.id 
+                    ? 'border-2 border-blue-600' 
+                    : 'border border-gray-200'
+                }`}
                 onClick={() => setSelectedRegion(region.id)}
               >
-                <RegionIcon src={region.icon} alt={region.name} />
-                <RegionName>{region.name}</RegionName>
-              </RegionCard>
+                <img 
+                  src={region.icon} 
+                  alt={region.name}
+                  className="w-16 h-16 object-contain"
+                />
+                <span className="font-inter font-medium text-base text-black text-center">
+                  {region.name}
+                </span>
+              </button>
             ))}
-          </RegionGrid>
-        </ContentSection>
-      </ContentContainer>
+          </div>
+        </div>
+      </div>
     </StepLayout>
   )
 }

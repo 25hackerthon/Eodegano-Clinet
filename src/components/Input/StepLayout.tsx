@@ -1,5 +1,4 @@
-import styled from '@emotion/styled'
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 interface StepLayoutProps {
   children: ReactNode
@@ -12,87 +11,6 @@ interface StepLayoutProps {
   previousText?: string
 }
 
-const LayoutContainer = styled.div`
-  height: calc(100vh - 116px);
-  display: flex;
-  flex-direction: column;
-  background: #f8f9fa;
-`
-
-const ContentArea = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 20px;
-  max-width: 800px;
-  margin: 0 auto;
-  width: 100%;
-  text-align: center;
-  height: 100%;
-`
-
-const FixedFooter = styled.div`
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: #f8f9fa;
-  padding: 30px 20px;
-  z-index: 100;
-`
-
-const FooterContent = styled.div`
-  max-width: 1200px;
-  margin: 0 30%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  position: relative;
-`
-
-const StepCounter = styled.div`
-  font-family: 'Inter', sans-serif;
-  font-weight: 500;
-  font-size: 16px;
-  color: #6c757d;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-`
-
-const Button = styled.button<{ variant?: 'primary' | 'secondary' }>`
-  padding: 12px 24px;
-  border-radius: 10px;
-  width: 15%;
-  font-family: pretendard, sans-serif;
-  font-size: 12px;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s;
-  min-width: 80px;
-  background: ${props => props.variant === 'primary' ? '#007bff' : '#cacaca'};
-  color: #ffffff;
-
-  &:hover:not(:disabled) {
-    background: ${props => props.variant === 'primary' ? '#0056b3' : '#a0a0a0'};
-  }
-
-  &:disabled {
-    background: #cacaca;
-    color: #6c757d;
-    cursor: not-allowed;
-  }
-`
-
-const ContentWrapper = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 116px - 120px); 
-`
-
 export default function StepLayout({
   children,
   currentStep,
@@ -104,34 +22,44 @@ export default function StepLayout({
   previousText = '이전'
 }: StepLayoutProps) {
   return (
-    <LayoutContainer>
-      <ContentWrapper>
-        <ContentArea>
+    <div className="h-[calc(100vh-116px)] flex flex-col bg-gray-50">
+      <div className="flex-1 flex flex-col h-[calc(100vh-116px-120px)]">
+        <div className="flex-1 flex flex-col items-center justify-center px-8 py-12 max-w-6xl mx-auto w-full text-center h-full">
           {children}
-        </ContentArea>
-      </ContentWrapper>
+        </div>
+      </div>
       
-      <FixedFooter>
-        <FooterContent>
-          <Button 
-            variant="secondary" 
+      <div className="fixed bottom-0 left-0 right-0 bg-gray-50 py-8 px-5 z-[100]">
+        <div className="max-w-5xl mx-auto flex justify-between items-center relative">
+          <button 
+            className={`px-6 py-3 rounded-lg w-[15%] font-pretendard text-xs border-none cursor-pointer transition-all duration-200 min-w-20 text-white ${
+              !onPrevious 
+                ? 'bg-gray-400 text-gray-500 cursor-not-allowed' 
+                : 'bg-gray-400 hover:bg-gray-500'
+            }`}
             onClick={onPrevious}
             disabled={!onPrevious}
           >
             {previousText}
-          </Button>
+          </button>
           
-          <StepCounter>{currentStep}/{totalSteps}</StepCounter>
+          <div className="font-inter font-medium text-base text-gray-500 absolute left-1/2 transform -translate-x-1/2">
+            {currentStep}/{totalSteps}
+          </div>
           
-          <Button 
-            variant="primary" 
+          <button 
+            className={`px-6 py-3 rounded-lg w-[15%] font-pretendard text-xs border-none cursor-pointer transition-all duration-200 min-w-20 text-white ${
+              nextDisabled || !onNext
+                ? 'bg-gray-400 text-gray-500 cursor-not-allowed'
+                : 'bg-blue-600 hover:bg-blue-700'
+            }`}
             onClick={onNext}
             disabled={nextDisabled || !onNext}
           >
             {nextText}
-          </Button>
-        </FooterContent>
-      </FixedFooter>
-    </LayoutContainer>
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }

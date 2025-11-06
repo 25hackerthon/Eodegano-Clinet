@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import styled from '@emotion/styled'
 import StepLayout from './StepLayout'
 
 interface Step1ConceptProps {
@@ -18,78 +17,6 @@ const concepts = [
   { id: 'tourist', name: '유명관광지', icon: '/src/assets/icon9.svg' },
 ]
 
-const ContentContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  width: 100%;
-`
-
-const TitleSection = styled.div`
-  padding-top: 60px;
-  margin-bottom: 40px;
-`
-
-const StepTitle = styled.h1`
-  font-family: 'Inter', sans-serif;
-  font-weight: 700;
-  font-size: 36px;
-  color: #000000;
-  margin: 0;
-  text-align: center;
-`
-
-const ContentSection = styled.div`
-  flex: 1;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-`
-
-const ConceptGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 150px);
-  gap: 30px 20px;
-  justify-content: center;
-`
-
-const ConceptCard = styled.button<{ selected?: boolean }>`
-  width: 150px;
-  height: 150px;
-  border: ${props => props.selected ? '2px solid #007bff' : '1px solid #e9ecef'};
-  border-radius: 20px;
-  background: #ffffff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  cursor: pointer;
-  transition: all 0.2s;
-  padding: 15px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-
-  &:hover {
-    border-color: #007bff;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
-`
-
-const ConceptIcon = styled.img`
-  width: 60px;
-  height: 60px;
-  object-fit: contain;
-`
-
-const ConceptName = styled.span`
-  font-family: 'Inter', sans-serif;
-  font-weight: 500;
-  font-size: 14px;
-  color: #000000;
-  text-align: center;
-`
-
 export default function Step1Concept({ onNext }: Step1ConceptProps) {
   const [selectedConcept, setSelectedConcept] = useState<string>('')
 
@@ -106,26 +33,38 @@ export default function Step1Concept({ onNext }: Step1ConceptProps) {
       onNext={handleNext}
       nextDisabled={!selectedConcept}
     >
-      <ContentContainer>
-        <TitleSection>
-          <StepTitle>이번 여행의 컨셉은 무엇인가요?</StepTitle>
-        </TitleSection>
+      <div className="flex flex-col h-full w-full">
+        <div className="pt-16 mb-12">
+          <h1 className="font-inter font-bold text-5xl text-black m-0 text-center">
+            이번 여행의 컨셉은 무엇인가요?
+          </h1>
+        </div>
         
-        <ContentSection>
-          <ConceptGrid>
+        <div className="flex-1 flex items-start justify-center">
+          <div className="grid grid-cols-3 gap-y-12 gap-x-10 justify-center">
             {concepts.map((concept) => (
-              <ConceptCard
+              <button
                 key={concept.id}
-                selected={selectedConcept === concept.id}
+                className={`w-44 h-44 rounded-3xl bg-white flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-200 p-6 shadow-md hover:border-blue-600 hover:-translate-y-0.5 hover:shadow-lg ${
+                  selectedConcept === concept.id 
+                    ? 'border-2 border-blue-600' 
+                    : 'border border-gray-200'
+                }`}
                 onClick={() => setSelectedConcept(concept.id)}
               >
-                <ConceptIcon src={concept.icon} alt={concept.name} />
-                <ConceptName>{concept.name}</ConceptName>
-              </ConceptCard>
+                <img 
+                  src={concept.icon} 
+                  alt={concept.name}
+                  className="w-16 h-16 object-contain"
+                />
+                <span className="font-inter font-medium text-base text-black text-center">
+                  {concept.name}
+                </span>
+              </button>
             ))}
-          </ConceptGrid>
-        </ContentSection>
-      </ContentContainer>
+          </div>
+        </div>
+      </div>
     </StepLayout>
   )
 }

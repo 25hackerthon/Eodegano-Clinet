@@ -1,102 +1,10 @@
 import { useState } from 'react'
-import styled from '@emotion/styled'
 import StepLayout from './StepLayout'
 
 interface Step3ScheduleProps {
   onNext: (startDate: string, endDate: string) => void
   onPrevious: () => void
 }
-
-const ContentContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  width: 100%;
-`
-
-const TitleSection = styled.div`
-  padding-top: 60px;
-  margin-bottom: 40px;
-`
-
-const StepTitle = styled.h1`
-  font-family: 'Inter', sans-serif;
-  font-weight: 700;
-  font-size: 36px;
-  color: #000000;
-  margin: 0;
-  text-align: center;
-`
-
-const ContentSection = styled.div`
-  flex: 1;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding-top: 60px;
-`
-
-const DateInputs = styled.div`
-  width: 100%;
-  max-width: 500px;
-  display: flex;
-  flex-direction: column;
-  gap: 40px;
-`
-
-const DateInputGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-`
-
-const DateLabel = styled.label`
-  font-family: 'Inter', sans-serif;
-  font-weight: 600;
-  font-size: 20px;
-  color: #000000;
-  text-align: center;
-`
-
-const DateInputWrapper = styled.div`
-  width: 100%;
-  height: 70px;
-  border: 2px solid #e9ecef;
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  padding: 0 20px;
-  background: #ffffff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-
-  &:focus-within {
-    border-color: #007bff;
-    box-shadow: 0 4px 16px rgba(0, 123, 255, 0.15);
-  }
-`
-
-const DateInput = styled.input`
-  flex: 1;
-  border: none;
-  outline: none;
-  font-family: 'Inter', sans-serif;
-  font-weight: 500;
-  font-size: 18px;
-  color: #000000;
-  text-align: center;
-
-  &::placeholder {
-    color: #6c757d;
-  }
-
-  &::-webkit-datetime-edit {
-    text-align: center;
-  }
-
-  &::-webkit-datetime-edit-fields-wrapper {
-    text-align: center;
-  }
-`
 
 export default function Step3Schedule({ onNext, onPrevious }: Step3ScheduleProps) {
   const [startDate, setStartDate] = useState<string>('')
@@ -118,38 +26,46 @@ export default function Step3Schedule({ onNext, onPrevious }: Step3ScheduleProps
       onNext={handleNext}
       nextDisabled={!isValid}
     >
-      <ContentContainer>
-        <TitleSection>
-          <StepTitle>여행 일정이 어떻게 되나요?</StepTitle>
-        </TitleSection>
+      <div className="flex flex-col h-full w-full">
+        <div className="pt-16 mb-12">
+          <h1 className="font-inter font-bold text-5xl text-black m-0 text-center">
+            여행 일정이 어떻게 되나요?
+          </h1>
+        </div>
         
-        <ContentSection>
-          <DateInputs>
-            <DateInputGroup>
-              <DateLabel>시작 날짜</DateLabel>
-              <DateInputWrapper>
-                <DateInput
+        <div className="flex-1 flex items-start justify-center pt-12">
+          <div className="w-full max-w-2xl flex flex-col gap-16">
+            <div className="flex flex-col gap-6">
+              <label className="font-inter font-semibold text-2xl text-black text-center">
+                시작 날짜
+              </label>
+              <div className="w-full h-20 border-2 border-gray-200 rounded-3xl flex items-center px-8 bg-white shadow-md focus-within:border-blue-600 focus-within:shadow-lg">
+                <input
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
+                  className="flex-1 border-none outline-none font-inter font-medium text-xl text-black text-center placeholder:text-gray-500"
                 />
-              </DateInputWrapper>
-            </DateInputGroup>
+              </div>
+            </div>
             
-            <DateInputGroup>
-              <DateLabel>종료 날짜</DateLabel>
-              <DateInputWrapper>
-                <DateInput
+            <div className="flex flex-col gap-6">
+              <label className="font-inter font-semibold text-2xl text-black text-center">
+                종료 날짜
+              </label>
+              <div className="w-full h-20 border-2 border-gray-200 rounded-3xl flex items-center px-8 bg-white shadow-md focus-within:border-blue-600 focus-within:shadow-lg">
+                <input
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                   min={startDate}
+                  className="flex-1 border-none outline-none font-inter font-medium text-xl text-black text-center placeholder:text-gray-500"
                 />
-              </DateInputWrapper>
-            </DateInputGroup>
-          </DateInputs>
-        </ContentSection>
-      </ContentContainer>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </StepLayout>
   )
 }
