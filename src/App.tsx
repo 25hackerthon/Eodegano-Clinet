@@ -1,22 +1,23 @@
-
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Header from './components/Header'
 import CreatePage from './pages/create'
-import HomePage from './pages/Home';
-import './App.css'
-import MainPage from "./page/Map";
+import HomePage from './pages/Home'
+import MapPage from "./page/Map"
+import { TripProvider } from "./hooks/tripId"
 
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <Routes>
-          <Route path='/' element={<HomePage />} />
-          <Route path="/create" element={<CreatePage />} />
-          <Route path="/map" element={<MainPage />} />
-        </Routes>
+      <TripProvider>
+        <div className="min-h-screen bg-gray-50">
+          <Header />
+          <Routes>
+            <Route path='/' element={<HomePage />} />
+            <Route path="/create" element={<CreatePage />} />
+            <Route path="/map" element={<MapPage />} />
+          </Routes>
         </div>
+      </TripProvider>
     </Router>
   )
 }

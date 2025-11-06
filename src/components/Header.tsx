@@ -1,8 +1,6 @@
 import { Link } from 'react-router-dom'
 
-
-
-export default function HeaderComponent() {
+export default function Header() {
   return (
     <header className="w-full bg-white border-b border-gray-400 h-29 flex items-center sticky top-0 z-[100]">
       <div className="w-full max-w-screen-2xl mx-auto flex items-center px-5 gap-10">
@@ -16,5 +14,4 @@ export default function HeaderComponent() {
       </div>
     </header>
   )
-
 }
