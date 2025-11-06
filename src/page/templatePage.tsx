@@ -1,10 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "../components/Header";
 import TemplateTabs from "../components/template/TemplateTabs";
 import TemplateCarousel from "../components/template/TemplateCarousel";
 import NavigationButtons from "../components/template/NavigationButtons";
 import TeleportDelModal from "../components/modal/TeleportModal";
 import PlaceDetailModal from "../components/modal/PlaceDetailModal";
+import { tripPlaceGetApi } from "../api/place/tripPlaceGetApi";
+import { tripPlacePostApi } from "../api/place/tripPlacePostApi";
+import { tripPlaceDelApi } from "../api/place/tripPlaceDelApi";
+import { recommendApi } from "../api/recommendApi";
+import { useTripId } from "../hooks/tripId";
 
 interface Template {
   id: number;
@@ -24,29 +29,84 @@ interface Template {
 }
 
 export default function TemplatePage() {
+  const { tripId } = useTripId();
+
   const [selectedTab, setSelectedTab] = useState<"음식점" | "관광지" | "숙소">(
     "음식점"
   );
+  const [addData, setAddData] = useState<"음식점" | "관광지" | "숙소">();
   const [selectedTime, setSelectedTime] =
     useState<string>("am 11:00 ~ pm 5:00");
 
   const [selectedPlace, setSelectedPlace] = useState<Template | null>(null);
 
-  // // API 호출 예시
-  // const fetchTemplatesWithCongestion = async () => {
-  //   const response = await fetch(
-  //     `/api/templates?type=${selectedTab}&time=${selectedTime}`
-  //   );
-  //   const data = await response.json();
+  const axiosTemplateGetData = async () => {
+    console.log("let's go", tripId);
+    if (!tripId) {
+      console.warn("tripId가 존재하지 않습니다.");
+      return;
+    }
 
-  //   // 서버에서 이미 필터링된 데이터를 받거나
-  //   // 클라이언트에서 필터링
-  //   const filtered = data.filter(
-  //     (t) => getCongestionForTime(t, selectedTime) <= 60
-  //   );
+    try {
+      const res = await tripPlaceGetApi(tripId);
+      console.log("전체 응답:", res);
+      console.log("응답 데이터:", res.data);
 
-  //   setTemplates(filtered);
-  // };
+      // 응답이 없는 경우
+      if (!res || !res.data) {
+        console.warn("응답에 데이터가 없습니다.");
+        return;
+      }
+
+      let dataArray: any[] = [];
+
+      // 배열인지 객체인지 확인
+      if (Array.isArray(res.data)) {
+        dataArray = res.data;
+      } else if (typeof res.data === "object") {
+        // 단일 객체인 경우 배열로 변환
+        dataArray = [res.data];
+      } else {
+        console.warn("예상치 못한 데이터 형식:", res.data);
+        return;
+      }
+
+      if (dataArray.length === 0) {
+        console.warn("데이터가 비어있습니다.");
+        setTemplates([]);
+        return;
+      }
+
+      // API 응답 데이터를 Template 형식으로 변환
+      const apiTemplates: Template[] = dataArray.map((item: any) => ({
+        id: item.placeId,
+        title: item.name || "이름 없음",
+        subtitle: item.address || "주소 없음",
+        description: item.description || "상세 설명이 없습니다.",
+        tags: item.category ? `#${item.category}` : "#기타",
+        image:
+          "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop",
+        lat: item.latitude || 0,
+        lng: item.longitude || 0,
+        type: (item.category as "음식점" | "관광지" | "숙소") || "관광지",
+        congestionByTime: {
+          morning: 30,
+          afternoon: 50,
+          evening: 40,
+        },
+      }));
+
+      console.log("변환된 템플릿:", apiTemplates);
+      setTemplates(apiTemplates);
+    } catch (err) {
+      console.error("데이터 요청 실패:", err);
+      // 에러 발생 시 더미 데이터 유지
+    }
+  };
+
+  useEffect(() => {
+    axiosTemplateGetData();
+  }, []);
 
   const [templates, setTemplates] = useState<Template[]>([
     {
@@ -154,11 +214,26 @@ export default function TemplatePage() {
     null
   );
   const [Modal, setModal] = useState<"추가" | "삭제" | "설명" | "정렬">();
+  const [placesId, setPlacesId] = useState(Number);
 
   const handlePlaceClick = (place: Template) => {
     setSelectedPlace(place);
     setIsPlaceModalOpen(true);
   };
+
+  const handleAdd = async () => {
+    setIsModalOpen(true);
+    setModal("추가");
+    console.log("Add new template");
+    const res = await tripPlacePostApi(tripId, templates);
+    setPlacesId(res.placeId);
+  };
+
+  useEffect(() => {
+    if (addData && placesId) {
+      console.log("State 업데이트됨:", addData, placesId);
+    }
+  }, [addData, placesId]);
 
   const handleConfirmAdd = (templateName: string) => {
     if (!templateName.trim()) return;
@@ -168,7 +243,7 @@ export default function TemplatePage() {
       title: templateName,
       subtitle: "새로운 템플릿입니다",
       description: "상세 설명이 없습니다.",
-      tags: "#새템플릿",
+      tags: `#새템플릿`,
       image:
         "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop",
       lat: 35.8714,
@@ -185,7 +260,7 @@ export default function TemplatePage() {
     console.log("Added new template:", newTemplate);
   };
 
-  const handleConfirm = (inputValue?: string) => {
+  const handleConfirm = async (inputValue?: string) => {
     if (Modal === "추가") {
       if (inputValue) {
         handleConfirmAdd(inputValue);
@@ -195,6 +270,8 @@ export default function TemplatePage() {
         setTemplates((prev) =>
           prev.filter((t) => t.id !== templateToDelete.id)
         );
+        const res = await tripPlaceDelApi(tripId, placesId);
+        console.log("삭제ㅔㅔㅔㅔㅔㅔㅔㅔㅔ", res);
         console.log("Deleted template:", templateToDelete.id);
       }
       setTemplateToDelete(null);
@@ -219,16 +296,12 @@ export default function TemplatePage() {
     setModal("삭제");
   };
 
-  const handleAdd = () => {
-    setIsModalOpen(true);
-    setModal("추가");
-    console.log("Add new template");
-  };
-
-  const handleAI = () => {
+  const handleAI = async () => {
     setIsModalOpen(true);
     setModal("정렬");
     console.log("Add new template");
+    const res = await recommendApi(tripId);
+    console.log("FADSafdsasdf", res);
   };
 
   const handlePrevious = () => {
